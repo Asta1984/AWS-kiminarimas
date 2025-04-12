@@ -3,7 +3,7 @@ import DoctorCard from './components/DoctorCard';
 import useDoctorStore from './store/doctorStore';
 
 function App() {
-  const { doctors, loading, punchIn } = useDoctorStore();
+  const { doctors, loadingDoctors, punchIn } = useDoctorStore();
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -25,7 +25,7 @@ function App() {
               key={doctor.id}
               {...doctor}
               onPunchIn={punchIn}
-              loading={loading}
+              loading={loadingDoctors[doctor.id] || false}
             />
           ))}
         </div>

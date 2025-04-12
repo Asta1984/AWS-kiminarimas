@@ -4,7 +4,7 @@ import { Doctor } from '../types/doctor';
 
 interface DoctorStore {
   doctors: Doctor[];
-  loading: boolean;
+  loadingDoctors: Record<string, boolean>;
   error: string | null;
   punchIn: (doctorId: string) => Promise<void>;
 }
@@ -33,34 +33,41 @@ const useDoctorStore = create<DoctorStore>((set) => ({
       image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=300&h=300",
     }
   ],
-  loading: false,
+  loadingDoctors: {},
   error: null,
   punchIn: async (doctorId: string) => {
     try {
-      set({ loading: true, error: null });
+      // Set loading state for this specific doctor only
+      set(state => ({ 
+        loadingDoctors: { ...state.loadingDoctors, [doctorId]: true },
+        error: null
+      }));
+      
       const doctor = useDoctorStore.getState().doctors.find(d => d.id === doctorId);
       
       if (!doctor) throw new Error('Doctor not found');
 
+
       const payload = {
         doctorName: doctor.name,
-        timestamp: new Date().toISOString(),
+        punchInTime: new Date().toISOString(),
       };
 
       // Replace with your actual API endpoint
-      await axios.post('https://api.example.com/attendance', payload);
+      await axios.post( 'https://wo2a1sbe8c.execute-api.us-east-2.amazonaws.com/devV1' , payload);
 
+      // Update only the punched doctor's state
       set(state => ({
         doctors: state.doctors.map(d =>
           d.id === doctorId ? { ...d, isPunchedIn: true } : d
         ),
-        loading: false,
+        loadingDoctors: { ...state.loadingDoctors, [doctorId]: false }
       }));
     } catch (error) {
-      set({ 
+      set(state => ({ 
         error: error instanceof Error ? error.message : 'An error occurred',
-        loading: false 
-      });
+        loadingDoctors: { ...state.loadingDoctors, [doctorId]: false }
+      }));
     }
   },
 }));
